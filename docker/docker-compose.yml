@@ -1,0 +1,47 @@
+version: "3.9"
+
+# ═══════════════════════════════════════════════════════════════
+# PhishGuard AI — Docker Compose
+# Usage:
+#   docker compose up -d          # Start in background
+#   docker compose up --build     # Rebuild and start
+#   docker compose down           # Stop and remove containers
+# ═══════════════════════════════════════════════════════════════
+
+services:
+  phishguard:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: phishguard-ai
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5000}:5000"
+    volumes:
+      # Persist trained models and SQLite database across restarts
+      - phishguard_models:/app/models
+      - phishguard_data:/app/datasets
+      - phishguard_db:/app
+    environment:
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - FLASK_DEBUG=${FLASK_DEBUG:-false}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - PORT=5000
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "com.phishguard.version=1.0.0"
+      - "com.phishguard.description=AI-powered phishing detection"
+
+volumes:
+  phishguard_models:
+    driver: local
+  phishguard_data:
+    driver: local
+  phishguard_db:
+    driver: local

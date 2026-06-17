@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Train Model — PhishGuard AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div class="pg-page-icon text-primary"><i class="bi bi-cpu"></i></div>
+      <div>
+        <h1 class="h3 mb-0">Train Model</h1>
+        <p class="text-muted mb-0">Train the phishing detection model using built-in synthetic data or your own CSV dataset.</p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Train form -->
+      <div class="col-lg-7">
+        <div class="pg-card">
+          <h6 class="text-muted text-uppercase letter-spacing-2 mb-3">
+            <i class="bi bi-database-fill me-2"></i>Training Configuration
+          </h6>
+          <form method="POST" enctype="multipart/form-data" id="trainForm">
+            <div class="mb-4">
+              <label class="form-label">Dataset (optional)</label>
+              <input type="file" name="dataset" accept=".csv" class="form-control pg-input" id="csvFile" />
+              <div class="form-text">
+                Upload a <code>.csv</code> with columns: <code>subject, body, sender, reply_to, headers, label</code>
+                (label: 1=phishing, 0=safe). Leave empty to use synthetic training data.
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100" id="trainBtn">
+              <span class="btn-text"><i class="bi bi-play-fill me-2"></i>Start Training</span>
+              <span class="btn-loading d-none">
+                <span class="spinner-border spinner-border-sm me-2"></span>Training in progress…
+              </span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Info panel -->
+      <div class="col-lg-5">
+        <div class="pg-card mb-3">
+          <h6 class="text-muted text-uppercase letter-spacing-2 mb-3">
+            <i class="bi bi-bar-chart-fill me-2"></i>Models Trained
+          </h6>
+          <ul class="list-unstyled mb-0">
+            {% for name, icon, desc in [
+              ('Naive Bayes', 'lightning-fill', 'Fast probabilistic baseline'),
+              ('Logistic Regression', 'graph-up', 'Linear model with high interpretability'),
+              ('Random Forest', 'tree-fill', 'Ensemble model — typically best performance'),
+            ] %}
+            <li class="d-flex align-items-center gap-3 mb-3">
+              <div class="pg-feature-icon text-primary" style="font-size:1.2rem">
+                <i class="bi bi-{{ icon }}"></i>
+              </div>
+              <div>
+                <div class="fw-semibold small">{{ name }}</div>
+                <div class="text-muted" style="font-size:.78rem">{{ desc }}</div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="pg-info-box">
+          <div class="d-flex gap-2">
+            <i class="bi bi-info-circle-fill text-info mt-1 flex-shrink-0"></i>
+            <div class="small text-muted">
+              All three models are trained and compared. The best-performing model
+              (by F1 score) is automatically saved and used for future analyses.
+              Training takes ~5–30 seconds depending on dataset size.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CSV format guide -->
+    <div class="pg-card mt-4">
+      <h6 class="text-muted text-uppercase letter-spacing-2 mb-3">
+        <i class="bi bi-file-earmark-spreadsheet me-2"></i>CSV Dataset Format
+      </h6>
+      <pre class="pg-code-block">subject,body,sender,reply_to,headers,label
+"URGENT: Verify your account","Dear user click here to verify...","attacker@evil.tk","harvest@other.xyz","","1"
+"Meeting tomorrow at 3pm","Hi team the meeting is confirmed...","colleague@company.com","","","0"
+"Your invoice is ready","Please find attached your invoice...","billing@vendor.com","","","0"
+"Win a FREE iPhone now!!!","Congratulations click the link...","promo@win-prize.xyz","","","1"</pre>
+      <p class="text-muted small mb-0">
+        <strong>label</strong>: <code>1</code> = phishing / spam &nbsp;|&nbsp; <code>0</code> = safe / legitimate<br>
+        Columns <code>reply_to</code> and <code>headers</code> are optional but improve accuracy.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('trainForm').addEventListener('submit', function() {
+  const btn = document.getElementById('trainBtn');
+  btn.querySelector('.btn-text').classList.add('d-none');
+  btn.querySelector('.btn-loading').classList.remove('d-none');
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

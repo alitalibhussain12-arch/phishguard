@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Result #{{ data.id }} — PhishGuard AI{% endblock %}
+
+{% block content %}
+{% set is_phish = data.is_phishing %}
+{% set prob_pct = (data.phishing_prob * 100)|round(1) %}
+
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+
+    <!-- Back link -->
+    <a href="{{ url_for('main.analyze') }}" class="btn btn-sm btn-outline-secondary mb-4">
+      <i class="bi bi-arrow-left me-1"></i>New Analysis
+    </a>
+
+    <!-- Verdict banner -->
+    <div class="pg-verdict-banner {{ 'pg-verdict-phishing' if is_phish else 'pg-verdict-safe' }} mb-4">
+      <div class="row align-items-center g-3">
+        <div class="col-auto">
+          <div class="pg-verdict-icon">
+            <i class="bi bi-{{ 'bug-fill' if is_phish else 'shield-fill-check' }}"></i>
+          </div>
+        </div>
+        <div class="col">
+          <div class="pg-verdict-label">Classification Result</div>
+          <div class="pg-verdict-title">
+            {{ '⚠ PHISHING DETECTED' if is_phish else '✓ EMAIL APPEARS SAFE' }}
+          </div>
+          <div class="small opacity-75 mt-1">
+            Analysis #{{ data.id }} &mdash;
+            {{ data.analyzed_at[:16].replace('T',' ') }} UTC
+          </div>
+        </div>
+        <div class="col-auto text-end">
+          <div class="pg-verdict-prob">{{ prob_pct }}%</div>
+          <div class="small opacity-75">Phishing Probability</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Left column -->
+      <div class="col-lg-5">
+
+        <!-- Probability gauge -->
+        <div class="pg-card mb-4">
+          <h6 class="text-muted text-uppercase letter-spacing-2 mb-3">
+            <i class="bi bi-speedometer2 me-2"></i>Risk Score
+          </h6>
+          <div class="pg-gauge-wrap">
+            <div class="pg-gauge">
+              <svg viewBox="0 0 200 120" class="pg-gauge-svg">
+                <!-- Background arc -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#333" stroke-width="14" stroke-linecap="round"/>
+                <!-- Coloured arc -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none"
+                      stroke="{{ '#dc2626' if prob_pct >= 85 else '#ea580c' if prob_pct >= 65 else '#ca8a04' if prob_pct >= 40 else '#16a34a' }}"
+                      stroke-width="14" stroke-linecap="round"
+                      stroke-dasharray="{{ prob_pct * 2.51 }} 251"
+                      class="pg-gauge-fill"/>
+                <!-- Needle -->
+                <text x="100" y="95" text-anchor="middle" class="pg-gauge-num">{{ prob_pct }}%</text>
+                <text x="100" y="112" text-anchor="middle" class="pg-gauge-sub">Phishing Probability</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Risk badge -->
+          <div class="text-center mt-3">
+            <span class="pg-risk-badge pg-risk-{{ data.risk_level }}">
+              {{ data.risk_level|upper }} RISK
+            </span>
+            <div class="text-muted small mt-2">
+              Confidence: <strong class="text-light">{{ data.confidence }}</strong>
+            </div>
+          </div>
+
+          <!-- Probability bar -->
+          <div class="mt-4">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>Safe <strong class="text-success">{{ (100 - prob_pct)|round(1) }}%</strong></span>
+              <span>Phishing <strong class="text-danger">{{ prob_pct }}%</strong></span>
+            </div>
+            <div class="progress" style="height:10px">
+              <div class="progress-bar bg-success" style="width:{{ (100 - prob_pct) }}%"></div>
+              <div class="progress-bar bg-danger" style="width:{{ prob_pct }}%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email metadata -->
+        <div class="pg-card">
+          <h6 class="text-muted text-uppercase letter-spacing-2 mb-3">
+            <i class="bi bi-info-circle me-2"></i>Email Metadata
+          </h6>
+          <dl class="pg-meta-list">
+            <dt>Subject</dt>
+            <dd>{{ data.subject or '—' }}</dd>
+            <dt>Sender</dt>
+            <dd>{{ data.sender or '—' }}</dd>
+            <dt>Source</dt>
+            <dd>{{ data.filename or data.source or 'pasted' }}</dd>
+            <dt>Model</dt>
+            <dd>{{ data.model_name or '—' }}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="col-lg-7">
+
+        <!-- Indicators -->
+        <div class="pg-card mb-4">
+          <h6 class="text-muted text-uppercase letter-spacing-2 mb-3">
+            <i class="bi bi-flag-fill me-2"></i>
+            Threat Indicators
+            {% if data.indicators %}
+              <span class="badge bg-danger ms-2">{{ data.indicators|length }}</span>
+            {% endif %}
+          </h6>
+
+          {% if data.indicators %}
+            <div class="d-flex flex-column gap-2">
+              {% for ind in data.indicators %}
+              <div class="pg-indicator pg-ind-{{ ind.severity }}">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="pg-ind-icon">
+                    <i class="bi bi-{{ 'exclamation-octagon-fill' if ind.severity == 'critical'
+                                   else 'exclamation-triangle-fill' if ind.severity == 'high'
+                                   else 'exclamation-circle-fill' if ind.severity == 'medium'
+                                   else 'info-circle-fill' }}"></i>
+                  </div>
+                  <div>
+                    <div class="pg-ind-title">{{ ind.indicator }}</div>
+                    <div class="pg-ind-detail">{{ ind.detail }}</div>
+                  </div>
+                  <div class="ms-auto">
+                    <span class="badge pg-severity-{{ ind.severity }}">{{ ind.severity|upper }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-check-circle-fill text-success fs-3 mb-2 d-block"></i>
+              No phishing indicators detected.
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Feature breakdown -->
+        <div class="pg-card">
+          <h6 class="text-muted text-uppercase letter-spacing-2 mb-3">
+            <i class="bi bi-table me-2"></i>Feature Breakdown
+          </h6>
+          {% if data.features %}
+          <div class="pg-feature-grid">
+            {% set feat = data.features %}
+            {% set items = [
+              ('URLs Found', feat.get('num_urls', 0), 'link'),
+              ('IP-Based URLs', feat.get('num_ip_urls', 0), 'hdd-network'),
+              ('URL Shorteners', feat.get('num_shortener_urls', 0), 'scissors'),
+              ('Suspicious TLDs', feat.get('num_suspicious_tld', 0), 'globe'),
+              ('Urgency Score', feat.get('urgency_score', 0), 'lightning'),
+              ('Credential Requests', feat.get('credential_score', 0), 'key'),
+              ('HTML Forms', feat.get('html_form_count', 0), 'code-square'),
+              ('Obfuscation', feat.get('has_obfuscation', 0), 'eye-slash'),
+            ] %}
+            {% for label, val, icon in items %}
+            <div class="pg-feat-item {{ 'pg-feat-flagged' if val > 0 else '' }}">
+              <i class="bi bi-{{ icon }}"></i>
+              <span class="pg-feat-label">{{ label }}</span>
+              <span class="pg-feat-val {{ 'text-danger fw-bold' if val > 0 else 'text-muted' }}">
+                {{ val }}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted small">No feature data available.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="d-flex gap-3 mt-4">
+      <a href="{{ url_for('main.analyze') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Analyze Another
+      </a>
+      <a href="{{ url_for('main.history') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-clock-history me-2"></i>View History
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

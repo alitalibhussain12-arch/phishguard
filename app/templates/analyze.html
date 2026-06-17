@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Analyze Email — PhishGuard AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div class="pg-page-icon text-primary"><i class="bi bi-search"></i></div>
+      <div>
+        <h1 class="h3 mb-0">Analyze Email</h1>
+        <p class="text-muted mb-0">Paste email content manually or upload a <code>.eml</code> file.</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-4" id="analyzeTab" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-paste">
+          <i class="bi bi-clipboard-fill me-1"></i>Paste Content
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-upload">
+          <i class="bi bi-upload me-1"></i>Upload .eml
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- Paste tab -->
+      <div class="tab-pane fade show active" id="tab-paste">
+        <form method="POST" action="{{ url_for('main.analyze') }}" id="pasteForm">
+          <div class="pg-card mb-3">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">From (Sender)</label>
+                <input type="text" name="sender" class="form-control pg-input"
+                       placeholder="attacker@evil-domain.com" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Reply-To <span class="text-muted">(optional)</span></label>
+                <input type="text" name="reply_to" class="form-control pg-input"
+                       placeholder="reply@different-domain.com" />
+              </div>
+              <div class="col-12">
+                <label class="form-label">Subject</label>
+                <input type="text" name="subject" class="form-control pg-input"
+                       placeholder="URGENT: Your account has been compromised!" />
+              </div>
+              <div class="col-12">
+                <label class="form-label">Email Body <span class="text-danger">*</span></label>
+                <textarea name="body" rows="10" class="form-control pg-input font-mono"
+                          placeholder="Paste the full email body here…" required></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary btn-lg px-5" id="analyzeBtn">
+              <span class="btn-text"><i class="bi bi-shield-fill-check me-2"></i>Analyze Now</span>
+              <span class="btn-loading d-none">
+                <span class="spinner-border spinner-border-sm me-2"></span>Analysing…
+              </span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="loadSample()">
+              <i class="bi bi-eyedropper me-1"></i>Load Sample
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Upload tab -->
+      <div class="tab-pane fade" id="tab-upload">
+        <form method="POST" action="{{ url_for('main.analyze') }}"
+              enctype="multipart/form-data" id="uploadForm">
+          <div class="pg-card mb-3">
+            <div class="pg-drop-zone" id="dropZone">
+              <i class="bi bi-cloud-upload fs-1 text-muted mb-3"></i>
+              <p class="mb-1 fw-semibold">Drop your <code>.eml</code> file here</p>
+              <p class="text-muted small mb-3">or click to browse</p>
+              <input type="file" name="eml_file" id="emlFile" accept=".eml,.txt"
+                     class="d-none" required />
+              <button type="button" class="btn btn-outline-primary"
+                      onclick="document.getElementById('emlFile').click()">
+                <i class="bi bi-folder2-open me-1"></i>Choose File
+              </button>
+              <p class="text-muted small mt-3 mb-0" id="fileName">No file selected (max 5 MB)</p>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg px-5" id="uploadBtn" disabled>
+            <i class="bi bi-shield-fill-check me-2"></i>Analyze File
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Info box -->
+    <div class="pg-info-box mt-4">
+      <div class="d-flex gap-3">
+        <i class="bi bi-info-circle-fill text-info mt-1 flex-shrink-0"></i>
+        <div class="small text-muted">
+          <strong class="text-light">Privacy:</strong> Email content is processed locally on your server.
+          Only metadata (classification, risk level, subject) is stored in the database.
+          Full email text is <em>not</em> persisted.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SAMPLE_EMAIL = {
+  sender: "security-alert@paypa1-verification.xyz",
+  reply_to: "collect@attacker-harvest.tk",
+  subject: "URGENT: Your PayPal account has been SUSPENDED - Verify NOW!!",
+  body: `Dear Valued Customer,
+
+We have detected suspicious activity on your PayPal account. Your account has been temporarily suspended due to multiple failed login attempts.
+
+IMMEDIATE ACTION REQUIRED - Your account will be permanently closed within 24 hours if you do not verify your identity.
+
+Please click the link below to verify your account and restore full access:
+
+http://192.168.1.45/paypal-secure-login/verify.php?token=a8f3k2
+
+You must provide the following to complete verification:
+- Username and password
+- Credit card number and CVV
+- Social Security Number
+- Date of birth
+
+Failure to respond will result in permanent account closure and all funds being held for 180 days.
+
+Act NOW - This is your FINAL WARNING!
+
+PayPal Security Team
+security@paypal.com`
+};
+
+function loadSample() {
+  document.querySelector('[name="sender"]').value = SAMPLE_EMAIL.sender;
+  document.querySelector('[name="reply_to"]').value = SAMPLE_EMAIL.reply_to;
+  document.querySelector('[name="subject"]').value = SAMPLE_EMAIL.subject;
+  document.querySelector('[name="body"]').value = SAMPLE_EMAIL.body;
+}
+
+// File input UX
+document.getElementById('emlFile').addEventListener('change', function() {
+  const name = this.files[0]?.name || 'No file selected';
+  document.getElementById('fileName').textContent = name;
+  document.getElementById('uploadBtn').disabled = !this.files[0];
+});
+
+// Loading spinner on submit
+document.getElementById('pasteForm').addEventListener('submit', function() {
+  const btn = document.getElementById('analyzeBtn');
+  btn.querySelector('.btn-text').classList.add('d-none');
+  btn.querySelector('.btn-loading').classList.remove('d-none');
+  btn.disabled = true;
+});
+
+// Drag-and-drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const input = document.getElementById('emlFile');
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+  }
+});
+</script>
+{% endblock %}
